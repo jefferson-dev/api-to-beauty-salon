@@ -1,16 +1,19 @@
 import { injectable, inject } from 'tsyringe';
 
+import AppError from '@infra/errors/AppError';
 import User from '@modules/users/infra/typeorm/entities/User';
 import ICreateUserDTO from '@modules/users/dtos/ICreateUser.dto';
 import IUserRepository from '@modules/users/repositories/IUser.repository';
-import AppError from '@infra/errors/AppError';
-import Encrypter from '@modules/users/infra/bcrypt/Encrypter';
+import IBcrypt from '@modules/users/infra/bcrypt/models/IBcrypt';
 
 @injectable()
 export default class CreateUserService {
   constructor(
     @inject('UsersRepository')
     private userRepository: IUserRepository,
+
+    @inject('Bcrypt')
+    private bcrypt: IBcrypt,
   ) {}
 
   public async execute({
@@ -24,8 +27,7 @@ export default class CreateUserService {
       throw new AppError('Email já cadastrado na aplicação.');
     }
 
-    const bcrypt = new Encrypter();
-    const hashPassword = await bcrypt.encrypter(password);
+    const hashPassword = await this.bcrypt.encrypter(password);
 
     const user = this.userRepository.create({
       name,
